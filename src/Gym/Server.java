@@ -1,45 +1,48 @@
 package Gym;
 
 import java.rmi.registry.Registry;
+import java.io.Serializable;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
 
 import edu.uab.cs203.Team;
+import edu.uab.cs203.network.GymClient;
 import edu.uab.cs203.network.GymServer;
 
 
-public class Server extends UnicastRemoteObject implements GymServer{
-
-/**
-	 * 
-	 */
-	private static final long serialVersionUID = 8741232380634334159L;
+public class Server extends UnicastRemoteObject implements GymServer, Serializable {
+	private ArrayList<GymClient> clients;
 
 /* 	KILL PORT WITH:	
- * 		lsof -i :10001
- *  		kill -9 PID
+ * 	lsof -i :10001
+ *  	kill -9 PID
 */
-	protected Server() throws RemoteException {
+	public Server() throws RemoteException {
+		this.clients = new ArrayList<GymClient>();
 	}
 
 	public static void main(String[] args) throws RemoteException {
-		Registry registry = LocateRegistry.createRegistry(10001);
-		Server server = new Server();
-
 		try {
+			Server server = new Server();
 			Runtime.getRuntime().exec("rmiregistry 10001");
-			registry.rebind("Server", server);
+			Registry registry = LocateRegistry.createRegistry(10001);
+			registry.bind("Server", server);
 		}
 		catch (Exception e) {
 			e.printStackTrace();
-			System.exit(-1);
+		
 		}
 		System.out.println("Server started.");
 
 	}
-
+	
+	public void clearClients() {
+		this.clients.clear();
+	}
+	
 	@Override
 	public String networkToString() throws RemoteException {
 		return null;
@@ -53,9 +56,10 @@ public class Server extends UnicastRemoteObject implements GymServer{
 
 	@Override
 	public void registerClientA(String host, int port, String registryName) throws RemoteException {
-		Registry registry = LocateRegistry.getRegistry(host, port);
         try {
-			ClientA stub = (ClientA) registry.lookup(registryName);
+        		Client clientA = (Client) LocateRegistry.getRegistry(host, port).lookup(registryName);
+            this.clients.add(clientA);
+
 		} catch (NotBoundException e) {
 			e.printStackTrace();
 		}
@@ -64,9 +68,9 @@ public class Server extends UnicastRemoteObject implements GymServer{
 
 	@Override
 	public void registerClientB(String host, int port, String registryName) throws RemoteException {
-		Registry registry = LocateRegistry.getRegistry(host, port);
         try {
-			ClientB stub = (ClientB) registry.lookup(registryName);
+    			Client clientB = (Client) LocateRegistry.getRegistry(host, port).lookup(registryName);
+             this.clients.add(clientB);
 		} catch (NotBoundException e) {
 			e.printStackTrace();
 		}
