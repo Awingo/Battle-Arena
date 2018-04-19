@@ -1,43 +1,56 @@
 package Gym;
 
+import java.io.Serializable;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.util.Scanner;
 
 import edu.uab.cs203.Objectmon;
 import edu.uab.cs203.Team;
 import edu.uab.cs203.network.GymClient;
 import edu.uab.cs203.network.GymServer;
 
-public class ClientB implements GymClient{
+public class ClientB implements GymClient, Serializable{
 
-    private ClientB() {}
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 3971860713529284609L;
 
-    public static void main(String[] args) throws RemoteException {
-    	String host = "localhost";
-        int port = 9997;
-        Registry registry = LocateRegistry.createRegistry(9997);
+	private ClientB() {}
 
-    	try {
-    		Runtime.getRuntime().exec("rmiregistry 9997");
+	public static void main(String[] args) throws RemoteException {
+		try {
+			
+			Registry registry = LocateRegistry.createRegistry(9997);
+			Runtime.getRuntime().exec("rmiregistry 9997");
+			
+			ClientB clientB = new ClientB();
+			registry.rebind("Client B", clientB);
 
-    		registry.rebind("Client B", new ClientB());
-    	} 
-    	catch (Exception e) {
-    		e.printStackTrace();
-    		System.exit(-1);
-    	}
-    	
-    	Registry ServerRegistry = LocateRegistry.getRegistry("localhost", 10001);;
-        try {
+
+			Registry ServerRegistry = LocateRegistry.getRegistry("localhost", 10001);;
+
 			GymServer stub = (GymServer) ServerRegistry.lookup("Server");
 			stub.registerClientB("localhost", 9997, "Client B");
-		} catch (NotBoundException e) {
+			
+			Scanner s = new Scanner(System.in);
+			while(true) {
+				String message = s.nextLine();
+				stub.printMessage(message);
+			}
+		} 
+		catch (NotBoundException e) {
 			e.printStackTrace();
 		}
-        
-    }
+		catch (Exception e) {
+			e.printStackTrace();
+			System.exit(-1);
+		}
+
+	}
 
 	@Override
 	public Team<Objectmon> getTeam() throws RemoteException {
@@ -54,7 +67,7 @@ public class ClientB implements GymClient{
 	@Override
 	public void networkTick() throws RemoteException {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -64,14 +77,14 @@ public class ClientB implements GymClient{
 	}
 
 	@Override
-	public void printMessage(String arg0) throws RemoteException {
-		// TODO Auto-generated method stub
-		
+	public void printMessage(String message) throws RemoteException {
+		System.out.println(message);
+
 	}
 
 	@Override
 	public void setTeam(Team arg0) throws RemoteException {
 		// TODO Auto-generated method stub
-		
+
 	}
 }

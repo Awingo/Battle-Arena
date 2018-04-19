@@ -13,6 +13,7 @@ import edu.uab.cs203.Team;
 import edu.uab.cs203.network.GymClient;
 import edu.uab.cs203.network.GymServer;
 
+// TODO: server messages prints to server itself
 
 public class Server extends UnicastRemoteObject implements GymServer, Serializable {
 	/**
@@ -37,7 +38,6 @@ public class Server extends UnicastRemoteObject implements GymServer, Serializab
 			Runtime.getRuntime().exec("rmiregistry 10001");
 			Registry registry = LocateRegistry.createRegistry(10001);
 			registry.bind("Server", server);
-			
 			Scanner s = new Scanner(System.in);
 			while(true) {
 				String message = s.nextLine();
@@ -59,23 +59,13 @@ public class Server extends UnicastRemoteObject implements GymServer, Serializab
 
 	@Override
 	public void printMessage(String message) throws RemoteException {
-		for (GymClient client : this.clients) {
-			try {
-				client.printMessage(message);
-			}
-			catch(RemoteException e) {
-				e.printStackTrace();
-				System.exit(-1);
-			}
-			
-		}
-		
+		System.out.println(message);
 	}
 
 	@Override
 	public void registerClientA(String host, int port, String registryName) throws RemoteException {
         try {
-        		Client client = (Client) LocateRegistry.getRegistry(host, port).lookup(registryName);
+        		GymClient client = (GymClient) LocateRegistry.getRegistry(host, port).lookup(registryName);
             this.clients.add(client);
             client.printMessage("Client A registered.");
 		} catch (NotBoundException e) {
@@ -86,7 +76,7 @@ public class Server extends UnicastRemoteObject implements GymServer, Serializab
 	@Override
 	public void registerClientB(String host, int port, String registryName) throws RemoteException {
         try {
-    			Client client = (Client) LocateRegistry.getRegistry(host, port).lookup(registryName);
+    			GymClient client = (GymClient) LocateRegistry.getRegistry(host, port).lookup(registryName);
              this.clients.add(client);
              client.printMessage("Client B registered.");
 		} catch (NotBoundException e) {

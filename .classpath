@@ -2,6 +2,6 @@
 <classpath>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="lib" path="/Users/anthony/eclipse-workspace/Lab10/battle-arena-Lab.10-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="/Users/anthony/Desktop/UAB/Spring_2018/CS_203/untitled2/battle-arena-Lab.10-SNAPSHOT.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

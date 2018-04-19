@@ -6,6 +6,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 import edu.uab.cs203.Objectmon;
 import edu.uab.cs203.Team;
@@ -42,7 +43,6 @@ public class Client implements GymClient, Serializable{
 			GymServer server = (GymServer) serverRegistry.lookup("Server");
 			server.registerClientA("localhost", 1354, "Client");
 			server.registerClientB("localhost", 1354, "Client");
-			
 		} 
 		catch (NotBoundException e) {
 			e.printStackTrace();
