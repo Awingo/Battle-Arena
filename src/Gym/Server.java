@@ -7,6 +7,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 import edu.uab.cs203.Team;
 import edu.uab.cs203.network.GymClient;
@@ -36,19 +37,21 @@ public class Server extends UnicastRemoteObject implements GymServer, Serializab
 			Runtime.getRuntime().exec("rmiregistry 10001");
 			Registry registry = LocateRegistry.createRegistry(10001);
 			registry.bind("Server", server);
+			
+			Scanner s = new Scanner(System.in);
+			while(true) {
+				String message = s.nextLine();
+				server.printMessage(message);
+			}
 		}
 		catch (Exception e) {
 			e.printStackTrace();
 		
 		}
 		System.out.println("Server started.");
+	}
+	
 
-	}
-	
-	public void clearClients() {
-		this.clients.clear();
-	}
-	
 	@Override
 	public String networkToString() throws RemoteException {
 		return null;
@@ -56,9 +59,9 @@ public class Server extends UnicastRemoteObject implements GymServer, Serializab
 
 	@Override
 	public void printMessage(String message) throws RemoteException {
-		for (GymClient chat : this.clients) {
+		for (GymClient client : this.clients) {
 			try {
-				chat.printMessage(message);
+				client.printMessage(message);
 			}
 			catch(RemoteException e) {
 				e.printStackTrace();
@@ -74,11 +77,10 @@ public class Server extends UnicastRemoteObject implements GymServer, Serializab
         try {
         		Client client = (Client) LocateRegistry.getRegistry(host, port).lookup(registryName);
             this.clients.add(client);
-
+            client.printMessage("Client A registered.");
 		} catch (NotBoundException e) {
 			e.printStackTrace();
 		}
-        System.out.println("CLient A registered.");
 	}
 
 	@Override
@@ -86,10 +88,10 @@ public class Server extends UnicastRemoteObject implements GymServer, Serializab
         try {
     			Client client = (Client) LocateRegistry.getRegistry(host, port).lookup(registryName);
              this.clients.add(client);
+             client.printMessage("Client B registered.");
 		} catch (NotBoundException e) {
 			e.printStackTrace();
 		}
-        System.out.println("CLient B registered.");
 		
 	}
 

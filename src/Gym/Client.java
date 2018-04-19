@@ -5,6 +5,7 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.util.ArrayList;
 
 import edu.uab.cs203.Objectmon;
 import edu.uab.cs203.Team;
@@ -13,12 +14,15 @@ import edu.uab.cs203.network.GymServer;
 
 public class Client implements GymClient, Serializable{
 
+	private ArrayList<Server> server;
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -7921006151087392344L;
 
-	private Client() {}
+	private Client() {
+		this.server = new ArrayList<Server>();
+	}
 
 
 	public static void main(String[] args) throws RemoteException {
@@ -38,10 +42,12 @@ public class Client implements GymClient, Serializable{
 			GymServer server = (GymServer) serverRegistry.lookup("Server");
 			server.registerClientA("localhost", 1354, "Client");
 			server.registerClientB("localhost", 1354, "Client");
+			
 		} 
 		catch (NotBoundException e) {
 			e.printStackTrace();
 		}
+
 
 	}
 
@@ -70,9 +76,8 @@ public class Client implements GymClient, Serializable{
 	}
 
 	@Override
-	public void printMessage(String arg0) throws RemoteException {
-		// TODO Auto-generated method stub
-
+	public void printMessage(String message) throws RemoteException {
+		System.out.println(message);
 	}
 
 	@Override
