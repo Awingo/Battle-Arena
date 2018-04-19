@@ -13,6 +13,11 @@ import edu.uab.cs203.network.GymServer;
 
 public class Client implements GymClient, Serializable{
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -7921006151087392344L;
+
 	private Client() {}
 
 
