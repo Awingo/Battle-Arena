@@ -5,6 +5,7 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.Scanner;
 
 import edu.uab.cs203.Objectmon;
@@ -12,34 +13,38 @@ import edu.uab.cs203.Team;
 import edu.uab.cs203.network.GymClient;
 import edu.uab.cs203.network.GymServer;
 
-public class ClientB implements GymClient, Serializable{
+public class ClientB extends UnicastRemoteObject implements GymClient, Serializable{
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 3971860713529284609L;
 
-	private ClientB() {}
 
-	public static void main(String[] args) throws RemoteException {
-		try {
+	private ClientB() throws RemoteException{}
+    
+
+    public static void main(String[] args) throws RemoteException {
+		try {			
+			int clientPort = 9997;
+			int serverPort = 10001;
+			String serverHost = "localhost";
+			GymClient clientB = new ClientB();
+
+			Runtime.getRuntime().exec("rmiregistry " + clientPort);
+			Registry registry = LocateRegistry.createRegistry(clientPort);
+			registry.bind("Client B", clientB);
+
+			Registry serverRegistry = LocateRegistry.getRegistry(serverHost, serverPort);
+			GymServer server = (GymServer) serverRegistry.lookup("Server");
 			
-			Registry registry = LocateRegistry.createRegistry(9997);
-			Runtime.getRuntime().exec("rmiregistry 9997");
-			
-			ClientB clientB = new ClientB();
-			registry.rebind("Client B", clientB);
-
-
-			Registry ServerRegistry = LocateRegistry.getRegistry("localhost", 10001);;
-
-			GymServer stub = (GymServer) ServerRegistry.lookup("Server");
-			stub.registerClientB("localhost", 9997, "Client B");
+			server.registerClientB("localhost", clientPort, "Client B");
 			
 			Scanner s = new Scanner(System.in);
 			while(true) {
 				String message = s.nextLine();
-				stub.printMessage(message);
+				server.printMessage(message);
+
 			}
 		} 
 		catch (NotBoundException e) {
@@ -50,41 +55,31 @@ public class ClientB implements GymClient, Serializable{
 			System.exit(-1);
 		}
 
-	}
+}
 
 	@Override
-	public Team<Objectmon> getTeam() throws RemoteException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Objectmon networkApplyDamage(Objectmon arg0, Objectmon arg1, int arg2) throws RemoteException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public void networkTick() throws RemoteException {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public Objectmon nextObjectmon() throws RemoteException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public void printMessage(String message) throws RemoteException {
-		System.out.println(message);
-
-	}
-
-	@Override
-	public void setTeam(Team arg0) throws RemoteException {
-		// TODO Auto-generated method stub
-
-	}
+    public Team<Objectmon> getTeam() throws RemoteException {
+        return this.getTeam();
+    }
+    @Override
+    public Objectmon networkApplyDamage(Objectmon first, Objectmon second, int damage) throws RemoteException {
+        int afterAttackHP = second.getHP()-damage;
+        second.setHp(afterAttackHP);
+        return second;
+    }
+    @Override
+    public void networkTick() throws RemoteException {
+    }
+    @Override
+    public Objectmon nextObjectmon() throws RemoteException {
+        return getTeam().nextObjectmon();
+    }
+    @Override
+    public void printMessage(String message) throws RemoteException {
+    		System.out.println("Chat message: " + message);    
+    	}
+    @Override
+    public void setTeam(Team arg0) throws RemoteException {
+        arg0 = this.getTeam();
+    }
 }
