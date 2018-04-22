@@ -10,81 +10,26 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 import edu.uab.cs203.Team;
+import edu.uab.cs203.lab09.Lab09HashmonGym;
 import edu.uab.cs203.network.GymClient;
 import edu.uab.cs203.network.GymServer;
 import edu.uab.cs203.network.NetworkGym;
 
-// TODO: server messages prints to server itself
 
-public class Server extends UnicastRemoteObject implements Serializable, GymServer, NetworkGym {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 808166874398061280L;
-
+public class Server extends UnicastRemoteObject implements Serializable, GymServer, NetworkGym{
 	private ArrayList<GymClient> clients;
+	private GymClient ClientA;
+	private GymClient ClientB;
+	private Team TeamA;
+	private Team TeamB;
+	private boolean teamAReady;
+	private boolean teamBReady;
 
 
-	/* 	KILL PORT WITH:	
-	 * 	lsof -i :10001
-	 *  	kill -9 PID
-	 */
 	public Server() throws RemoteException {
 		this.clients = new ArrayList<>();
 	}
-	
-	@Override
-	public void printMessage(String message) throws RemoteException {
-		System.out.println("Recieved message from client: " + message);
-		broadcastMessage(message);
-	}
 
-
-	public void broadcastMessage(String message) {
-		for (GymClient c : this.clients) {
-			try {
-				c.printMessage(message);
-			} catch (RemoteException e) {
-				e.printStackTrace();
-				System.exit(-1);
-			}
-		}
-	}
-	
-
-	@Override
-	public String networkToString() throws RemoteException {
-		return null;
-	}
-
-	
-
-	@Override
-	public void registerClientA(String host, int port, String registryName) throws RemoteException {
-		System.out.println("Registering client: " + host + ":" + port + ":" + registryName);
-		try {
-			GymClient clientA;
-			clientA  = (GymClient) LocateRegistry.getRegistry(host, port).lookup(registryName);
-			this.clients.add(clientA);
-			clientA.printMessage("Client A registered.");
-		} catch (NotBoundException e) {
-			e.printStackTrace();
-		}
-	}
-
-	@Override
-	public void registerClientB(String host, int port, String registryName) throws RemoteException {
-		System.out.println("Registering client: " + host + ":" + port + ":" + registryName);
-		try {
-			GymClient clientB;
-			clientB = (GymClient) LocateRegistry.getRegistry(host, port).lookup(registryName);
-			this.clients.add(clientB);
-			clientB.printMessage("Client B registered.");
-		} catch (NotBoundException e) {
-			e.printStackTrace();
-		}
-
-	}
 	public static void main(String[] args) throws RemoteException {
 		try {
 			Server server = new Server();
@@ -101,71 +46,103 @@ public class Server extends UnicastRemoteObject implements Serializable, GymServ
 
 	}
 
+
 	@Override
-	public void setTeamA(Team arg0) throws RemoteException {
-		// TODO Auto-generated method stub
+	public void printMessage(String message) throws RemoteException {
+		System.out.println("Recieved message from client: " + message);
+		broadcastMessage(message);
+	}
+
+	@Override
+	public String networkToString() throws RemoteException {
+		return null;
+	}
+
+	@Override
+	public void registerClientA(String host, int port, String registryName) throws RemoteException {
+		System.out.println("Registering client: " + host + ":" + port + ":" + registryName);
+		try {
+			GymClient clientA;
+			this.ClientA  = (GymClient) LocateRegistry.getRegistry(host, port).lookup(registryName);
+			this.clients.add(this.ClientA);
+			this.ClientA.printMessage("Client A registered.");
+		} catch (NotBoundException e) {
+			e.printStackTrace();
+		}
+	}
+
+	@Override
+	public void registerClientB(String host, int port, String registryName) throws RemoteException {
+		System.out.println("Registering client: " + host + ":" + port + ":" + registryName);
+		try {
+			GymClient clientB;
+			this.ClientB = (GymClient) LocateRegistry.getRegistry(host, port).lookup(registryName);
+			this.clients.add(this.ClientB);
+			this.ClientB.printMessage("Client B registered.");
+		} catch (NotBoundException e) {
+			e.printStackTrace();
+		}
 
 	}
 
 	@Override
-	public void setTeamAReady(boolean arg0) throws RemoteException {
-		// TODO Auto-generated method stub
-
+	public void setTeamA(Team team) throws RemoteException {
+		team = this.TeamA;
 	}
 
 	@Override
-	public void setTeamB(Team arg0) throws RemoteException {
-		// TODO Auto-generated method stub
-
+	public void setTeamAReady(boolean ready) throws RemoteException {
+		this.teamAReady = ready;
 	}
 
 	@Override
-	public void setTeamBReady(boolean arg0) throws RemoteException {
-		// TODO Auto-generated method stub
+	public void setTeamB(Team team) throws RemoteException {
+		team = this.TeamB;
+	}
 
+	@Override
+	public void setTeamBReady(boolean ready) throws RemoteException {
+		this.teamBReady = ready;
 	}
 
 
 	@Override
 	public void executeTurn() {
-		// TODO Auto-generated method stub
 
 	}
-
 
 	@Override
 	public void fight(int arg0) {
-		// TODO Auto-generated method stub
 
 	}
-
 
 	@Override
 	public GymClient getClientA() {
-		// TODO Auto-generated method stub
-		return null;
+		return this.ClientA;
 	}
-
 
 	@Override
 	public GymClient getClientB() {
-		// TODO Auto-generated method stub
-		return null;
+		return this.ClientB;
 	}
-
 
 	@Override
 	public Team getTeamA() {
-		// TODO Auto-generated method stub
-		return null;
+		try {
+			return this.ClientA.getTeam();
+		} catch (RemoteException e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
-
 
 	@Override
 	public Team getTeamB() {
-		// TODO Auto-generated method stub
-		return null;
+		try {
+			return this.ClientB.getTeam();
+		} catch (RemoteException e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
-
-
 }

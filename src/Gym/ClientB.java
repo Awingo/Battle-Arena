@@ -10,18 +10,18 @@ import java.util.Scanner;
 
 import edu.uab.cs203.Objectmon;
 import edu.uab.cs203.Team;
+import edu.uab.cs203.lab05.BasicTeam;
+import edu.uab.cs203.lab09.Lab09HashmonGym;
 import edu.uab.cs203.network.GymClient;
 import edu.uab.cs203.network.GymServer;
 
 public class ClientB extends UnicastRemoteObject implements GymClient, Serializable{
+	Team<Objectmon> team;
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 3971860713529284609L;
+	private ClientB() throws RemoteException{
+		this.team = new BasicTeam<>();
 
-
-	private ClientB() throws RemoteException{}
+	}
     
 
     public static void main(String[] args) throws RemoteException {
@@ -36,16 +36,10 @@ public class ClientB extends UnicastRemoteObject implements GymClient, Serializa
 			registry.bind("Client B", clientB);
 
 			Registry serverRegistry = LocateRegistry.getRegistry(serverHost, serverPort);
-			GymServer server = (GymServer) serverRegistry.lookup("Server");
+			Server server = (Server) serverRegistry.lookup("Server");
 			
 			server.registerClientB("localhost", clientPort, "Client B");
-			
-			Scanner s = new Scanner(System.in);
-			while(true) {
-				String message = s.nextLine();
-				server.printMessage(message);
 
-			}
 		} 
 		catch (NotBoundException e) {
 			e.printStackTrace();
@@ -59,27 +53,29 @@ public class ClientB extends UnicastRemoteObject implements GymClient, Serializa
 
 	@Override
     public Team<Objectmon> getTeam() throws RemoteException {
-        return this.getTeam();
+        return this.team;
     }
     @Override
     public Objectmon networkApplyDamage(Objectmon first, Objectmon second, int damage) throws RemoteException {
-        int afterAttackHP = second.getHP()-damage;
-        second.setHp(afterAttackHP);
-        return second;
+		if (!first.isFainted()) {
+			second.setHp(second.getHp() - damage);
+		}
+		return second;
     }
     @Override
     public void networkTick() throws RemoteException {
+		this.team.tick();
     }
     @Override
     public Objectmon nextObjectmon() throws RemoteException {
-        return getTeam().nextObjectmon();
+        return this.team.nextObjectmon();
     }
     @Override
     public void printMessage(String message) throws RemoteException {
     		System.out.println("Chat message: " + message);    
     	}
     @Override
-    public void setTeam(Team arg0) throws RemoteException {
-        arg0 = this.getTeam();
+    public void setTeam(Team team) throws RemoteException {
+        team = this.team;
     }
 }
