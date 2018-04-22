@@ -11,16 +11,15 @@ import java.util.Scanner;
 import edu.uab.cs203.Objectmon;
 import edu.uab.cs203.Team;
 import edu.uab.cs203.lab05.BasicTeam;
+import edu.uab.cs203.lab09.Hashmon;
 import edu.uab.cs203.lab09.Lab09HashmonGym;
 import edu.uab.cs203.network.GymClient;
 import edu.uab.cs203.network.GymServer;
 
 public class ClientB extends UnicastRemoteObject implements GymClient, Serializable{
-	Team<Objectmon> team;
+	static Team<Objectmon> team;
 
 	private ClientB() throws RemoteException{
-		this.team = new BasicTeam<>();
-
 	}
     
 
@@ -36,9 +35,19 @@ public class ClientB extends UnicastRemoteObject implements GymClient, Serializa
 			registry.bind("Client B", clientB);
 
 			Registry serverRegistry = LocateRegistry.getRegistry(serverHost, serverPort);
-			Server server = (Server) serverRegistry.lookup("Server");
+			GymServer server = (GymServer) serverRegistry.lookup("Server");
 			
 			server.registerClientB("localhost", clientPort, "Client B");
+
+			Scanner s = new Scanner(System.in);
+			System.out.println("List the hashmon you want on your team.. ^_^");
+			String[] names = s.nextLine().split(", ");
+			team = new BasicTeam<>("Team B", names.length);
+			Hashmon.loadObjectdex("objectdex.txt");
+			for (String name : names) {
+				team.add(new Hashmon(name));
+			}
+			server.printMessage(team.toString());
 
 		} 
 		catch (NotBoundException e) {
@@ -64,11 +73,11 @@ public class ClientB extends UnicastRemoteObject implements GymClient, Serializa
     }
     @Override
     public void networkTick() throws RemoteException {
-		this.team.tick();
+		this.getTeam().tick();
     }
     @Override
     public Objectmon nextObjectmon() throws RemoteException {
-        return this.team.nextObjectmon();
+        return this.getTeam().nextObjectmon();
     }
     @Override
     public void printMessage(String message) throws RemoteException {

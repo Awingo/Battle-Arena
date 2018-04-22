@@ -1,6 +1,8 @@
 package Gym;
 
 import java.io.Serializable;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -16,13 +18,13 @@ import edu.uab.cs203.lab09.Hashmon;
 import edu.uab.cs203.lab09.Lab09HashmonGym;
 import edu.uab.cs203.network.GymClient;
 import edu.uab.cs203.network.GymServer;
+import edu.uab.cs203.network.NetworkGym;
 
 public class ClientA extends UnicastRemoteObject implements GymClient, Serializable{
 
-	Team<Objectmon> team;
+	static Team<Objectmon> team;
 
 	private ClientA() throws RemoteException{
-		this.team = new BasicTeam<>();
 	}
 
 
@@ -42,8 +44,16 @@ public class ClientA extends UnicastRemoteObject implements GymClient, Serializa
 
 			server.registerClientA("localhost", clientPort, "Client A");
 
+			Scanner s = new Scanner(System.in);
 
-
+			System.out.println("List the hashmon you want on your team.. ^_^");
+			String[] names = s.nextLine().split(", ");
+			team = new BasicTeam<>("Team A", names.length);
+			Hashmon.loadObjectdex("objectdex.txt");
+			for (String name : names) {
+				team.add(new Hashmon(name));
+			}
+			server.printMessage(team.toString());
 		}
 		catch (NotBoundException e) {
 			e.printStackTrace();
@@ -61,18 +71,32 @@ public class ClientA extends UnicastRemoteObject implements GymClient, Serializa
     }
     @Override
     public Objectmon networkApplyDamage(Objectmon first, Objectmon second, int damage) throws RemoteException {
-		if (!first.isFainted()) {
-			second.setHp(second.getHp() - damage);
+		try {
+			Method method = Objectmon.class.getDeclaredMethod("takeDamage", Integer.TYPE);
+			method.setAccessible(true);
+			method.invoke(second, damage);
+		} catch (NoSuchMethodException var5) {
+			System.err.println(var5);
+
+			assert false;
+		} catch (IllegalAccessException var6) {
+			System.err.println(var6);
+
+			assert false;
+		} catch (InvocationTargetException var7) {
+			System.err.println(var7);
+
+			assert false;
 		}
-        return second;
+		return second;
     }
     @Override
     public void networkTick() throws RemoteException {
-		this.team.tick();
+		this.getTeam().tick();
     }
     @Override
     public Objectmon nextObjectmon() throws RemoteException {
-        return team.nextObjectmon();
+        return this.getTeam().nextObjectmon();
     }
     @Override
     public void printMessage(String message) throws RemoteException {
