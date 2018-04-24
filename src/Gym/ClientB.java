@@ -9,6 +9,7 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.Scanner;
 
 import edu.uab.cs203.Objectmon;
+import edu.uab.cs203.ObjectmonNameGenerator;
 import edu.uab.cs203.Team;
 import edu.uab.cs203.lab05.BasicTeam;
 import edu.uab.cs203.lab09.Hashmon;
@@ -17,7 +18,7 @@ import edu.uab.cs203.network.GymClient;
 import edu.uab.cs203.network.GymServer;
 
 public class ClientB extends UnicastRemoteObject implements GymClient, Serializable{
-	static Team<Objectmon> team;
+	static Team<Objectmon> teamB;
 
 	private ClientB() throws RemoteException{
 	}
@@ -38,17 +39,17 @@ public class ClientB extends UnicastRemoteObject implements GymClient, Serializa
 			GymServer server = (GymServer) serverRegistry.lookup("Server");
 			
 			server.registerClientB("localhost", clientPort, "Client B");
-
 			Scanner s = new Scanner(System.in);
+
 			System.out.println("List the hashmon you want on your team.. ^_^");
 			String[] names = s.nextLine().split(", ");
-			team = new BasicTeam<>("Team B", names.length);
+			teamB = new BasicTeam<>("Team B", names.length);
 			Hashmon.loadObjectdex("objectdex.txt");
 			for (String name : names) {
-				team.add(new Hashmon(name));
+				teamB.add(new Hashmon(name));
 			}
-			server.printMessage(team.toString());
-
+			server.printMessage(teamB.toString());
+			server.setTeamBReady(true);
 		} 
 		catch (NotBoundException e) {
 			e.printStackTrace();
@@ -62,7 +63,18 @@ public class ClientB extends UnicastRemoteObject implements GymClient, Serializa
 
 	@Override
     public Team<Objectmon> getTeam() throws RemoteException {
-        return this.team;
+//		this.teamB = new BasicTeam<>("Team B", 3);
+//		try {
+//			Hashmon.loadObjectdex("objectdex.txt");
+//			for (int i = 0; i < this.teamB.getMaxSize(); ++i) {
+//				Hashmon hmon = new Hashmon(ObjectmonNameGenerator.nextName());
+//				this.teamB.add(hmon);
+//			}
+//		}
+//		catch (Exception e) {
+//			e.printStackTrace();
+//		}
+        return this.teamB;
     }
     @Override
     public Objectmon networkApplyDamage(Objectmon first, Objectmon second, int damage) throws RemoteException {
@@ -81,10 +93,10 @@ public class ClientB extends UnicastRemoteObject implements GymClient, Serializa
     }
     @Override
     public void printMessage(String message) throws RemoteException {
-    		System.out.println("Chat message: " + message);    
+    		System.out.println(message);
     	}
     @Override
     public void setTeam(Team team) throws RemoteException {
-        team = this.team;
+        team = this.teamB;
     }
 }

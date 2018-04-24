@@ -60,13 +60,8 @@ public class Server extends UnicastRemoteObject implements Serializable, GymServ
 	public String networkToString() throws RemoteException {
         String stats = "";
         if(this.getTeamA().size() != 0 || this.getTeamB().size() != 0) {
-            for(int i = 0; i < this.getTeamA().size(); i++) {
-                stats += this.getTeamA().get(i).toString() + "\n";
-            }
-            stats += "\n\n";
-            for(int i = 0; i < getTeamB().size(); i++) {
-                stats += getTeamB().get(i).toString();
-            }
+        	stats += this.getTeamA().toString() + "\n";
+        	stats += getTeamB().toString();
         }
         return stats;
 	}
@@ -105,6 +100,9 @@ public class Server extends UnicastRemoteObject implements Serializable, GymServ
 	@Override
 	public void setTeamAReady(boolean ready) throws RemoteException {
 		this.teamAReady = ready;
+		if (this.teamAReady && this.teamBReady) {
+		    fight(3);
+        }
 	}
 
 	@Override
@@ -115,6 +113,9 @@ public class Server extends UnicastRemoteObject implements Serializable, GymServ
 	@Override
 	public void setTeamBReady(boolean ready) throws RemoteException {
 		this.teamBReady = ready;
+        if (this.teamAReady && this.teamBReady) {
+            fight(3);
+        }
 	}
 
 
@@ -128,7 +129,7 @@ public class Server extends UnicastRemoteObject implements Serializable, GymServ
             if (omanA != null && omanB != null) {
                 this.printMessage(omanA.toString());
                 this.printMessage(omanB.toString());
-                AbstractAttack nextAttack = omanA.nextAttack();
+                AbstractAttack nextAttack = this.getClientA().nextAttack(omanA);
                 int damageDone;
                 StatusEffect effect;
                 if (nextAttack != null) {
@@ -140,7 +141,7 @@ public class Server extends UnicastRemoteObject implements Serializable, GymServ
                 if (omanB.isFainted()) {
                     this.printMessage(omanB + " fainted! Moving to next turn!");
                 } else {
-                    nextAttack = omanB.nextAttack();
+                    nextAttack = this.getClientB().nextAttack(omanB);
                     if (nextAttack != null) {
                         damageDone = nextAttack.getDamage(omanA);
                         this.getClientB().networkApplyDamage(omanB, omanA, damageDone);

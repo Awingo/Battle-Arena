@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 import edu.uab.cs203.Objectmon;
+import edu.uab.cs203.ObjectmonNameGenerator;
 import edu.uab.cs203.Team;
 import edu.uab.cs203.lab05.BasicTeam;
 import edu.uab.cs203.lab09.Hashmon;
@@ -22,7 +23,7 @@ import edu.uab.cs203.network.NetworkGym;
 
 public class ClientA extends UnicastRemoteObject implements GymClient, Serializable{
 
-	static Team<Objectmon> team;
+	static Team<Objectmon> teamA;
 
 	private ClientA() throws RemoteException{
 	}
@@ -43,17 +44,17 @@ public class ClientA extends UnicastRemoteObject implements GymClient, Serializa
 			GymServer server = (GymServer) serverRegistry.lookup("Server");
 
 			server.registerClientA("localhost", clientPort, "Client A");
-
 			Scanner s = new Scanner(System.in);
 
 			System.out.println("List the hashmon you want on your team.. ^_^");
 			String[] names = s.nextLine().split(", ");
-			team = new BasicTeam<>("Team A", names.length);
+			teamA = new BasicTeam<>("Team A", names.length);
 			Hashmon.loadObjectdex("objectdex.txt");
 			for (String name : names) {
-				team.add(new Hashmon(name));
+				teamA.add(new Hashmon(name));
 			}
-			server.printMessage(team.toString());
+			server.printMessage(teamA.toString());
+			server.setTeamAReady(true);
 		}
 		catch (NotBoundException e) {
 			e.printStackTrace();
@@ -66,28 +67,23 @@ public class ClientA extends UnicastRemoteObject implements GymClient, Serializa
 }
 
     @Override
-    public Team<Objectmon> getTeam() throws RemoteException {
-        return this.team;
+    public Team<Objectmon> getTeam() {
+//		this.teamA = new BasicTeam<>("Team A", 3);
+//		try {
+//			Hashmon.loadObjectdex("objectdex.txt");
+//			for (int i = 0; i < this.teamA.getMaxSize(); ++i) {
+//				Hashmon hmon = new Hashmon(ObjectmonNameGenerator.nextName());
+//				this.teamA.add(hmon);
+//			}
+//		}
+//		catch (Exception e) {
+//			e.printStackTrace();
+//		}
+		return this.teamA;
     }
     @Override
     public Objectmon networkApplyDamage(Objectmon first, Objectmon second, int damage) throws RemoteException {
-		try {
-			Method method = Objectmon.class.getDeclaredMethod("takeDamage", Integer.TYPE);
-			method.setAccessible(true);
-			method.invoke(second, damage);
-		} catch (NoSuchMethodException var5) {
-			System.err.println(var5);
-
-			assert false;
-		} catch (IllegalAccessException var6) {
-			System.err.println(var6);
-
-			assert false;
-		} catch (InvocationTargetException var7) {
-			System.err.println(var7);
-
-			assert false;
-		}
+		second.setHp(second.getHp() - damage);
 		return second;
     }
     @Override
@@ -100,10 +96,11 @@ public class ClientA extends UnicastRemoteObject implements GymClient, Serializa
     }
     @Override
     public void printMessage(String message) throws RemoteException {
-		System.out.println("Chat message: " + message);
+		System.out.println(message);
 	}
     @Override
     public void setTeam(Team team) throws RemoteException {
-        team = this.team;
+        team = this.teamA;
     }
 }
+
