@@ -7,11 +7,13 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Scanner;
 
 import edu.uab.cs203.Objectmon;
 import edu.uab.cs203.Team;
 import edu.uab.cs203.attacks.AbstractAttack;
+import edu.uab.cs203.effects.AbstractStatusEffect;
 import edu.uab.cs203.effects.StatusEffect;
 import edu.uab.cs203.lab09.Lab09HashmonGym;
 import edu.uab.cs203.network.GymClient;
@@ -58,10 +60,10 @@ public class Server extends UnicastRemoteObject implements Serializable, GymServ
 
 	@Override
 	public String networkToString() throws RemoteException {
-        String stats = "";
+          String stats = "";
         if(this.getTeamA().size() != 0 || this.getTeamB().size() != 0) {
-        	stats += this.getTeamA().toString() + "\n";
-        	stats += getTeamB().toString();
+        	stats += teamToString(this.getTeamA()) + "\n";
+        	stats += teamToString(this.getTeamB());
         }
         return stats;
 	}
@@ -101,7 +103,7 @@ public class Server extends UnicastRemoteObject implements Serializable, GymServ
 	public void setTeamAReady(boolean ready) throws RemoteException {
 		this.teamAReady = ready;
 		if (this.teamAReady && this.teamBReady) {
-		    fight(3);
+		    fight(100);
         }
 	}
 
@@ -114,7 +116,7 @@ public class Server extends UnicastRemoteObject implements Serializable, GymServ
 	public void setTeamBReady(boolean ready) throws RemoteException {
 		this.teamBReady = ready;
         if (this.teamAReady && this.teamBReady) {
-            fight(3);
+            fight(100);
         }
 	}
 
@@ -127,9 +129,9 @@ public class Server extends UnicastRemoteObject implements Serializable, GymServ
             Objectmon omanA = this.getClientA().nextObjectmon();
             Objectmon omanB = this.getClientB().nextObjectmon();
             if (omanA != null && omanB != null) {
-                this.printMessage(omanA.toString());
-                this.printMessage(omanB.toString());
-                AbstractAttack nextAttack = this.getClientA().nextAttack(omanA);
+				AbstractAttack nextAttack = this.getClientA().nextAttack(omanA);
+				this.printMessage(objectmonToString(omanA));
+                this.printMessage(objectmonToString(omanB));
                 int damageDone;
                 StatusEffect effect;
                 if (nextAttack != null) {
@@ -139,7 +141,7 @@ public class Server extends UnicastRemoteObject implements Serializable, GymServ
                 }
 
                 if (omanB.isFainted()) {
-                    this.printMessage(omanB + " fainted! Moving to next turn!");
+                    this.printMessage(omanB.getName() + " fainted! Moving to next turn!");
                 } else {
                     nextAttack = this.getClientB().nextAttack(omanB);
                     if (nextAttack != null) {
@@ -149,7 +151,7 @@ public class Server extends UnicastRemoteObject implements Serializable, GymServ
                     }
 
                     if (omanA.isFainted()) {
-                        this.printMessage(omanA + " fainted! Moving to next turn!");
+                        this.printMessage(omanA.getName() + " fainted! Moving to next turn!");
                     }
                 }
             }
@@ -163,17 +165,17 @@ public class Server extends UnicastRemoteObject implements Serializable, GymServ
 	public void fight(int rounds) {
 	    try {
             this.printMessage("Today's fight will be");
-            this.printMessage(this.getTeamA().toString());
+            this.printMessage(teamToString(this.getTeamA()));
             this.printMessage("vs.");
-            this.printMessage(this.getTeamB().toString());
+            this.printMessage(teamToString(this.getTeamB()));
             int roundCount = 0;
 
             while((this.getTeamA().canFight() || this.getTeamB().canFight()) && roundCount < rounds) {
                 ++roundCount;
                 this.printMessage("+++++++++++++");
-                this.printMessage("Round " + roundCount + ": FIGHT!");
+                this.printMessage("Round " + roundCount + ": FIGHT!\n");
                 this.executeTurn();
-                this.printMessage("At the end of round " + roundCount + ":");
+                this.printMessage("\nAt the end of round " + roundCount + ":\n");
                 this.printMessage(networkToString());
                 this.printMessage("------------");
             }
@@ -186,8 +188,8 @@ public class Server extends UnicastRemoteObject implements Serializable, GymServ
                 this.printMessage("It was a draw!");
             }
 
-            this.printMessage("Team A: " + this.getTeamA().toString());
-            this.printMessage("Team B: " + this.getTeamB().toString());
+            this.printMessage("Team A: " + teamToString(this.getTeamA()));
+            this.printMessage("Team B: " + teamToString(this.getTeamB()));
         }
         catch (RemoteException e){
 	        e.printStackTrace();
@@ -223,4 +225,37 @@ public class Server extends UnicastRemoteObject implements Serializable, GymServ
 			return null;
 		}
 	}
+
+	public String teamToString(Team t) {
+		String s = t.getName();
+		Iterator it = t.listIterator();
+		while(it.hasNext()) {
+			Objectmon o = (Objectmon) it.next();
+			s += "\n" + objectmonToString(o);
+		}
+		return s;
+	}
+
+	public String objectmonToString(Objectmon o) {
+		String s = "";
+		String attacks = "";
+		String effects = "";
+		for (AbstractAttack a : o.getAttacks()) {
+			attacks += "\t\n" + a.getName();
+		}
+		for (StatusEffect e : o.getStatusEffects()) {
+			effects += "\t\n" + "Effect Type" + e.getClass().getName() +
+					"\t\n" + "Ticks Remaining: " + e.getTicksRemaining() +
+					"\t\n" + "Prevent attack: " + e.preventAttack();
+		}
+		s += "\n" + "Name: " + o.getName() + "\n"
+				+ "Hp: " + o.getHp() + "\n"
+				+ "Stamina: " + o.getStamina() + "\n"
+				+ "Weight: " + o.getWeight() + "\n"
+				+ "Attacks: " + attacks + "\n"
+				+ "Status Effects: " + effects;
+
+		return s;
+	}
+
 }
